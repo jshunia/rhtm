@@ -1,0 +1,245 @@
+% Standalone document; compile twice with pdflatex.
+% The preparation invariant is inherited from the 120-state construction.
+% The state-37 invariant below has a direct proof from the transition table.
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,booktabs}
+\usepackage[hidelinks]{hyperref}
+\usepackage[nameinlink,capitalise]{cleveref}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\crefname{theorem}{Theorem}{Theorems}
+\crefname{lemma}{Lemma}{Lemmas}
+\crefname{corollary}{Corollary}{Corollaries}
+
+\title{A Further Reduction from 120 to 119 States}
+\author{Joseph M. Shunia}
+\date{September 28, 2026}
+\hypersetup{
+  pdftitle={A Further Reduction from 120 to 119 States},
+  pdfauthor={Joseph M. Shunia}
+}
+
+\begin{document}
+\maketitle
+
+\section{Proof of the reduction}
+\label{sec:119reduction}
+
+Let $M_{120}$ denote the canonical 120-state machine, with working states
+$Q=\{0,\ldots,119\}$, initial state $0$, and external halt target $H$.
+Write
+\[
+  \delta(q,a)=(b,D,r)
+\]
+when state $q$, reading $a$, writes $b$, moves in direction
+$D\in\{L,R\}$, and enters $r$. All state numbers in the following
+reachability argument refer to $M_{120}$.
+For a configuration $(q,h,\tau)$, the tape is
+$\tau\colon\mathbb Z\to\{0,1\}$ and the head is at $h$.
+The preparation-state argument below invokes the established bootstrap
+and register-backend results of the original 120-state construction.
+
+\begin{lemma}[Preparation-state restriction]
+\label{lem:119prep}
+Every visit to state $6$ in the blank-tape computation of $M_{120}$
+scans zero.
+\end{lemma}
+
+\begin{proof}
+State $6$ is the canonical image of the backend state
+\texttt{1b.reg.prep\_1}. The finite bootstrap certificate
+in the original manuscript (the lemma titled ``Bootstrap certificate'')
+reaches the first source decision without halting.
+It therefore cannot execute the completed transition
+$\delta(6,1)=(1,R,H)$ during initialization.
+
+After initialization, the register normal form and the primitive-operation
+argument of the original manuscript's ``Primitive register semantics''
+lemma apply. On entry to
+\texttt{1b.reg.prep\_1}, the head is one cell to the right of the newly
+written preparation marker, in the separating zero gap. Hence the scanned
+cell is zero. Each primitive operation restores normal form; the control
+simulation and restart protocol preserve this assertion at all subsequent
+operations, by that manuscript's ``Backend simulation'' theorem,
+``Natural restart of \texttt{main}'' lemma, and ``Dispatcher
+specialization'' proposition.
+The all-tapes state quotient and the subsequent 121-to-120 projection
+preserve the tape and head position along the blank-tape execution, so
+the same restriction holds in $M_{120}$.
+This uses the established backend invariant, with no assumption about
+whether the source computation eventually halts.
+\end{proof}
+
+\begin{lemma}[Return-state restriction]
+\label{lem:119return}
+Every visit to state $37$ in the blank-tape computation of $M_{120}$
+scans one.
+\end{lemma}
+
+\begin{proof}
+We give a direct argument from the transition table. Set
+\[
+\begin{split}
+ A&=\{39,48,74,80,90,93,94,113,117\},\\
+ B&=\{72,75,102,112\}.
+\end{split}
+\]
+For each state $q\in A\cup B$, there is exactly one incoming transition.
+Its source $p$ is listed below; in every case the instruction is
+$\delta(p,1)=(1,R,q)$.
+\begin{center}
+\begin{tabular}{rr@{\qquad}rr}
+\toprule
+Target $q$ & Source $p$ & Target $q$ & Source $p$\\
+\midrule
+39 & 33 & 72 & 59\\
+48 & 40 & 75 & 61\\
+74 & 60 & 102 & 95\\
+80 & 65 & 112 & 108\\
+90 & 76 & & \\
+93 & 81 & & \\
+94 & 82 & & \\
+113 & 109 & & \\
+117 & 114 & & \\
+\bottomrule
+\end{tabular}
+\end{center}
+Since none of these states is the initial state, every configuration in
+one of them follows such a transition. The cell immediately to the left
+of the new head is the cell just written. Consequently
+\begin{equation}
+\label{eq:119leftone}
+ q\in A\cup B\quad\Longrightarrow\quad\tau(h-1)=1.
+\end{equation}
+
+The complete lists of incoming transitions to states $86$ and $89$ are
+\[
+\begin{aligned}
+ \delta(72,1)&=(1,R,86),\\
+ \delta(75,1)=\delta(102,1)=\delta(112,1)&=(1,R,89).
+\end{aligned}
+\]
+Their source states belong to $B$. Thus \eqref{eq:119leftone}, together
+with the newly written one, gives
+\begin{equation}
+\label{eq:119twoleft}
+ q\in\{86,89\}\quad\Longrightarrow\quad
+ \tau(h-2)=\tau(h-1)=1.
+\end{equation}
+
+The complete list of incoming transitions to state $32$ is
+\[
+\begin{aligned}
+ \delta(29,1)=\delta(115,1)&=(1,R,32),\\
+ \delta(86,1)=\delta(89,1)&=(0,L,32).
+\end{aligned}
+\]
+The right-moving transitions leave a newly written one immediately to
+the left of the head. For a left-moving transition, the cell immediately
+to the left of the new head was two cells to the left of the old head,
+and is one by \eqref{eq:119twoleft}. Therefore
+\begin{equation}
+\label{eq:119state32}
+ q=32\quad\Longrightarrow\quad\tau(h-1)=1.
+\end{equation}
+
+Finally, the incoming transitions to state $37$ are exactly
+\[
+ \delta(p,1)=(0,L,37)\quad(p\in A\cup\{32\}),
+ \qquad \delta(37,0)=(0,L,37).
+\]
+Every entry from a different state therefore lands on a one, by
+\eqref{eq:119leftone} and \eqref{eq:119state32}.
+If a configuration in state $37$ scanning zero existed, consider the
+first such configuration. It is not initial and cannot arise from a
+different state. Its predecessor must therefore use the transition
+$(37,0)$, contradicting the choice of the first occurrence.
+Thus $(37,0)$ never occurs.
+\end{proof}
+
+\begin{theorem}[Reduction to 119 working states]
+\label{thm:119reduction}
+There is a deterministic binary Turing machine $M_{119}$ with 119
+working states whose blank-tape run agrees with that of $M_{120}$ at
+every step in tape contents and head position, with control states
+related by a fixed projection. The two machines halt at exactly the
+same time, or both run forever.
+\end{theorem}
+
+\begin{proof}
+Define the state projection by $\pi(H)=H$ and
+\[
+ \pi(q)=
+ \begin{cases}
+ q,&0\le q\le36,\\
+ 6,&q=37,\\
+ q-1,&38\le q\le119.
+ \end{cases}
+\]
+Its image on working states is $\{0,\ldots,118\}$.
+For every $q\notin\{6,37\}$ and $a\in\{0,1\}$, define
+\[
+ \delta'(\pi(q),a)=(b,D,\pi(r))
+ \quad\text{when}\quad\delta(q,a)=(b,D,r).
+\]
+At the merged state, define
+\[
+ \boxed{\delta'(6,0)=(0,R,8),\qquad
+        \delta'(6,1)=(0,L,10).}
+\]
+These are respectively the original instructions
+$\delta(6,0)$ and $\delta(37,1)$, with their targets projected.
+The construction gives one instruction for each of the
+$119\cdot2=238$ state/symbol pairs.
+
+By \cref{lem:119prep,lem:119return}, every state/read pair occurring
+in the original blank-tape run belongs to
+\[
+ D=\bigl(Q\times\{0,1\}\bigr)
+       \setminus\{(6,1),(37,0)\}.
+\]
+For every $(q,a)\in D$, the construction satisfies
+\begin{equation}
+\label{eq:119projection}
+ \delta(q,a)=(b,D_0,r)
+ \quad\Longrightarrow\quad
+ \delta'(\pi(q),a)=(b,D_0,\pi(r)).
+\end{equation}
+There are exactly 238 such equations.
+
+Induct on execution time. Initially the tapes are blank, the head
+positions agree, and $\pi(0)=0$. Suppose the runs currently have
+identical tapes and head positions, with states $q$ and $\pi(q)$.
+They read the same symbol $a$, and the original run uses a pair in $D$.
+Equation \eqref{eq:119projection} gives identical writes and head
+moves, and projected successor states. Hence the same relation holds
+after the next step. Since $\pi(H)=H$ and no working state maps to $H$,
+entry to the halt target occurs simultaneously.
+\end{proof}
+
+\begin{corollary}
+\label{cor:119rh}
+The machine $M_{119}$ halts on the blank tape if and only if the
+Riemann hypothesis is false. It has exactly one halting transition,
+namely $(76,1)$.
+\end{corollary}
+
+\begin{proof}
+The halting equivalence follows from \cref{thm:119reduction} and the
+established RH equivalence of $M_{120}$.
+The two halting transitions in the original table are $(6,1)$ and
+$(77,1)$. The first is replaced at the merged state; the second is
+retained with state number $\pi(77)=76$. No other transition is
+changed into a halting transition.
+\end{proof}
+
+The reduction is valid for the blank-tape computation. Its two
+reachability restrictions, and therefore the reduction itself, do not
+assume the Riemann hypothesis. In particular, preservation holds even
+if the original machine eventually reaches its arithmetic-failure halt.
+
+\end{document}
