@@ -1,4 +1,4 @@
-# RH in 120 states: source-only reproduction package
+# RH in 119 states: source-only reproduction package
 
 Joseph M. Shunia, *A 120-State Binary Turing Machine Equivalent to the
 Riemann Hypothesis*, arXiv:2609.30306 (September 2026).
