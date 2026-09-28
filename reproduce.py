@@ -32,9 +32,8 @@ def build():
     oldedges=verify(oldtab,oldcert)['reachable_read_overapproximation']
     oldgroups,_=optimize(oldtab,oldedges);oldfinal,oldmap=quot(oldtab,oldedges,oldgroups)
     verify_projection(oldtab,oldfinal,oldcert,oldmap)
-    # Packaging adaptation: the historical archived table is not in the
-    # manuscript. Regenerate this predecessor without claiming archive equality.
-    assert len(oldfinal)==242
+    archived=read(ROOT/'baseline/RH_121.tm')
+    assert oldfinal==archived, 'regenerated predecessor differs from baseline/RH_121.tm'
     b=RHBuilder();raw,tab,names,unmerged,bmap,rounds,missing=compile_named(b)
     cert=generate(tab,2);info=verify(tab,cert)
     groups,trace=optimize(tab,info['reachable_read_overapproximation'])
@@ -71,8 +70,8 @@ def build():
     except AssertionError:pass
     else:raise AssertionError('Corrupted control pair accepted')
     info.pop('reachable_read_overapproximation')
-    report={'previous_121_regenerated':True,'published_120_matches':True,
-        'historical_121_archive_compared':False,'raw_counts':count(raw),'predecessor_states':len(tab)//2,
+    report={'original_121_reproduced_exactly':True,'published_120_matches':True,
+        'raw_counts':count(raw),'predecessor_states':len(tab)//2,
         'final_states':len(final)//2,'transitions':len(final),'minimizer_rounds':rounds,'completed_missing':missing,
         'window':info,'merge_trace':trace,'control_bisimulation':control_info,'G_bits':g.bit_length(),
         'sha256':hashlib.sha256((ROOT/'machines/RH_120.tm').read_bytes()).hexdigest(),

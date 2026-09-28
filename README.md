@@ -6,9 +6,11 @@ Riemann Hypothesis*, arXiv:2609.30306 (September 2026).
 Paper: https://arxiv.org/abs/2609.30306
 
 This directory contains the Python and C++ source extracted from the paper's
-appendices, plus a small runner that checks the published finite results.
-It starts with no machine tables, certificates, reports, or compiled binaries.
-Everything needed at runtime is local; verification performs no downloads.
+appendices, the archived predecessor table `baseline/RH_121.tm`, the further
+119-state reduction, and a small runner that checks the published finite
+results. It starts with no generated machine tables, certificates, reports, or
+compiled binaries. Everything needed at runtime is local; verification performs
+no downloads.
 
 ## Quick start
 
@@ -53,9 +55,12 @@ in the source ZIP.
 
 ## What is checked
 
+- Exact agreement between the regenerated 121-state predecessor and the
+  archived table `baseline/RH_121.tm`.
 - Exact SHA-256 agreement between the regenerated 120-state table and the
   literal table printed in Appendix I. The expected fingerprint was extracted
-  from the manuscript before running the compiler.
+  from the manuscript before running the compiler. The runner also checks the
+  SHA-256 of `baseline/RH_121.tm`.
 - Compilation to 122 named working states, all-tapes minimization to 121,
   and a reachability-restricted projection to 120 states / 240 transitions.
 - The source-control certificate, including all possible conditional-decrement
@@ -73,6 +78,10 @@ in the source ZIP.
   89,775,610 steps, followed by a separate literal stage replay checking
   completed endpoints 2, 3, and 4. The runner also checks their published step
   counts: 92,233,600; 113,387,256; and 208,951,810.
+- The further reduction to 119 states: the table argument that state 37 scans
+  one, all 238 projection equations on the admitted reads, exact agreement with
+  `RH_119.tm`, and its single halting transition `(76, 1)`. Exclusion of the
+  original read `(6, 1)` remains a premise from the 120-state proof.
 
 The literal replays use the generated named table, whose filename is
 `RH_121_raw_named.tm` in the original source. That filename is retained even
@@ -83,6 +92,44 @@ These are finite implementation and certificate checks. The analytic RH
 equivalence and the uniform register-backend semantics are proved in the
 paper; the runner is not a proof-assistant formalization of those arguments.
 
+## Further reduction to 119 states
+
+`RH_120_to_119_reduction.tex` is a standalone note dated September 28, 2026.
+It merges states 6 and 37 of the canonical 120-state table. The distributed
+result is `RH_119.tm`: 119 working states, 238 transitions, and one halting
+transition, `(76, 1)`.
+
+The note uses two blank-tape restrictions. State 37 scans one by a direct
+argument from the transition table. State 6, the canonical image of
+`1b.reg.prep_1`, scans zero by the original bootstrap certificate and
+register-backend invariant. On every other state/read pair, the projected
+instruction writes the same symbol, moves the same way, and enters the
+projected successor. The blank-tape runs therefore agree in tape contents and
+head position, and they halt together. The note concludes that this 119-state
+machine halts on the blank tape exactly when the Riemann hypothesis is false.
+
+`verify_119.py` checks the finite table steps of that argument against
+`RH_120.tm` and `RH_119.tm`:
+
+- Each incoming transition cited for states in the return-state argument is
+  the complete incoming list of the published 120-state table. Those
+  transitions exclude `(37, 0)` on every run that starts in state 0.
+- The projection sends state 37 to state 6 and shifts every later state down
+  by one. The merged state keeps the original `(6, 0)` instruction and the
+  original `(37, 1)` instruction. All 238 admitted projection equations hold,
+  and the resulting table is exactly `RH_119.tm`.
+- The original halting transitions are `(6, 1)` and `(77, 1)`. After
+  projection the only halting transition is `(76, 1)`.
+
+The checker takes the exclusion of `(6, 1)` from the 120-state proof. The
+analytic equivalence of the 120-state machine likewise remains in the original
+paper. The SHA-256 of `RH_119.tm`, including its comment header and final LF
+newline, is:
+
+```text
+d138ee6bd2aa50acfe1da4c5399783a7942c510c766c46fa4ab920ec92dc60ab
+```
+
 ## Run the individual published checks
 
 Run the reproduction driver first so the checkers have their generated inputs:
@@ -90,7 +137,10 @@ Run the reproduction driver first so the checkers have their generated inputs:
 ```sh
 python3 -B reproduce.py --test
 python3 -B verify_certificate.py
+python3 -B verify_119.py
 ```
+
+`verify_119.py` reads only the distributed `RH_120.tm` and `RH_119.tm` files, so it does not need the reproduction driver.
 
 To compile and run the C++ programs individually on a Unix-like system:
 
@@ -121,6 +171,16 @@ header and final LF newline, is:
 b4b0f07607fc92dae6940f6e6c2d184fec3c13bbfc8cd00a0253321be6009db5
 ```
 
+The SHA-256 of the archived predecessor `baseline/RH_121.tm`, including its
+header and final LF newline, is:
+
+```text
+212084bf23735b4d8ea4f1763812787a1bc48a002a4dccb322541a3bbd5ea37a
+```
+
+That file has 121 states and 242 transitions. It is an input to the printed
+reproduction driver, not one of the tables printed in the manuscript listings.
+
 The following files are extracted verbatim except for the two documented
 packaging adaptations below. Line numbers refer to the supplied TeX file.
 
@@ -143,19 +203,19 @@ packaging adaptations below. Line numbers refer to the supplied TeX file.
 | `verify_math.py` | 2692-2850 |
 | `godel.py` | 2856-2878 |
 
-1. The printed `reproduce.py` expects `baseline/RH_121.tm`, an older archived
-   table absent from the manuscript's listings. This package retains the
-   regeneration and certificate verification of that preceding source and
-   checks its 121-state count, but does not claim an independent comparison
-   with the missing historical archive. The build report states this explicitly.
-   The final 120-state table is instead anchored independently to Appendix I
-   by the fixed fingerprint in `published_reference.py`.
+1. The printed `reproduce.py` compares the regenerated predecessor with
+   `baseline/RH_121.tm`. That archive is included here. The driver also checks
+   the regenerated 120-state table against the Appendix I fingerprint in
+   `published_reference.py`. That fingerprint check is not part of the printed
+   listing.
 2. `tables.py` writes explicit UTF-8/LF bytes, avoiding platform-dependent
    newline translation so the published fingerprint is portable.
 
-`verify.py`, `published_reference.py`, this README, and `.gitignore` are the
-packaging additions. The compiler, arithmetic routines, minimizer, certificate
-algorithms, and C++ replay code are unchanged from the printed listings.
+`verify.py`, `verify_119.py`, `published_reference.py`, this README, and
+`.gitignore` are the packaging additions. The compiler, arithmetic routines,
+minimizer, certificate algorithms, and C++ replay code are unchanged from the
+printed listings. `RH_120_to_119_reduction.tex` and `RH_119.tm` are the
+subsequent 119-state reduction; they are not part of the extracted appendices.
 
 The paper also reports a separate 601-state NQL implementation from preceding
 work. Its source and compiler snapshot are not printed in these appendices;

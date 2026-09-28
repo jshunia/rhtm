@@ -35,13 +35,17 @@ def load(relative):
 
 
 def check_published_counts():
-    from published_reference import PUBLISHED_120_SHA256
+    from published_reference import BASELINE_121_SHA256, PUBLISHED_120_SHA256
 
     build = load("reports/build.json")
     cert = load("reports/certificate_checks.json")
     math = load("reports/math_checks.json")
     dispatch = load("machines/RH_121.dispatch.json")
+    baseline = hashlib.sha256((ROOT / "baseline/RH_121.tm").read_bytes()).hexdigest()
     digest = hashlib.sha256((ROOT / "machines/RH_120.tm").read_bytes()).hexdigest()
+    require(baseline == BASELINE_121_SHA256, "baseline/RH_121.tm differs from the recovered archive")
+    require(build["original_121_reproduced_exactly"] is True,
+            "Regenerated 121-state table differs from baseline/RH_121.tm")
     require(digest == PUBLISHED_120_SHA256, "Generated table differs from Appendix I")
     require(build["raw_counts"] == {"framework": 59, "decision_DAG": 63, "total": 122},
             "Unexpected named-state counts")
@@ -86,6 +90,7 @@ def main():
     run([sys.executable, "-B", "reproduce.py", "--test"], "Rebuilding machines and running arithmetic/control checks...")
     run([sys.executable, "-B", "verify_certificate.py"], "Running the standalone certificate checker...")
     check_published_counts()
+    run([sys.executable, "-B", "verify_119.py"], "Checking the 120-to-119 reduction...")
 
     if args.python_only:
         print(f"Python verification passed ({time.monotonic() - started:.2f}s). Literal tape replays were skipped.")
